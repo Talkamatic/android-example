@@ -1,0 +1,131 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent" android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin" tools:context=".MainActivity">
+
+    <TextView android:text="@string/hello_world" android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/textView2" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="PTT"
+        android:id="@+id/pttButton"
+        android:layout_marginTop="40dp"
+        android:layout_below="@+id/disconnectButton"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignRight="@+id/disconnectButton"
+        android:layout_alignEnd="@+id/disconnectButton" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/pttStatus"
+        android:id="@+id/pttStatus"
+        android:layout_alignTop="@+id/pttButton"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="U>"
+        android:id="@+id/userUtteranceLabel"
+        android:layout_marginTop="30dp"
+        android:layout_below="@+id/pttButton" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:id="@+id/userUtterance"
+        android:layout_alignBottom="@+id/userUtteranceLabel"
+        android:layout_alignTop="@+id/userUtteranceLabel"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_toRightOf="@+id/interpretedUtteranceLabel"
+        android:layout_toEndOf="@+id/interpretedUtteranceLabel" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:id="@+id/backendStatus"
+        android:layout_below="@+id/textView2"
+        android:layout_toRightOf="@+id/connectButton"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="S>"
+        android:id="@+id/systemUtteranceLabel"
+        android:layout_below="@+id/interpretedUtteranceLabel"
+        android:layout_alignRight="@+id/interpretedUtteranceLabel"
+        android:layout_alignEnd="@+id/interpretedUtteranceLabel"
+        android:layout_marginTop="27dp"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="IU>"
+        android:id="@+id/interpretedUtteranceLabel"
+        android:layout_below="@+id/userUtteranceLabel"
+        android:layout_marginTop="24dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:id="@+id/interpretedUtterance"
+        android:layout_alignTop="@+id/interpretedUtteranceLabel"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignBottom="@+id/interpretedUtteranceLabel"
+        android:layout_toRightOf="@+id/systemUtteranceLabel"
+        android:layout_toEndOf="@+id/systemUtteranceLabel" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:id="@+id/systemUtterance"
+        android:layout_alignBottom="@+id/systemUtteranceLabel"
+        android:layout_alignRight="@+id/interpretedUtterance"
+        android:layout_alignEnd="@+id/interpretedUtterance"
+        android:layout_toEndOf="@+id/userUtteranceLabel"
+        android:layout_alignLeft="@+id/interpretedUtterance"
+        android:layout_alignStart="@+id/interpretedUtterance" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Connect"
+        android:id="@+id/connectButton"
+        android:layout_alignTop="@+id/backendStatus"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignRight="@+id/disconnectButton"
+        android:layout_alignEnd="@+id/disconnectButton" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Disconnect"
+        android:id="@+id/disconnectButton"
+        android:layout_below="@+id/connectButton"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+</RelativeLayout>
