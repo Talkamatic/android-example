@@ -3,5 +3,4 @@ libs
 .gradle/
 .idea/
 android-example-app.iml
-gradle/
 local.properties
