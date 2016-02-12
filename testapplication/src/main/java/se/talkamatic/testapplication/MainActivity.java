@@ -11,6 +11,10 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -29,6 +33,13 @@ public class MainActivity extends AppCompatActivity {
     private IAsrListener recognitionListener;
     private IEventListener eventListener;
     private Handler mainHandler;
+
+    private static final Map<String, String> CONTACTS = new HashMap<String, String>() {{
+        put("John", "0701234567");
+        put("Lisa", "0709876543");
+        put("Mary", "0706574839");
+        put("Andy", null);
+    }};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -131,9 +142,91 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onPerformAction(String appName, String name, Map<String, String> args) {
-                Log.d("eventListener", "onPerformAction(appName: " + appName + ", name: " + name + ", args: " + args + ")");
-                tdmConnector.getEventHandler().deviceActionFinished(new ActionResult(true));
+            public void onAction(String ddd, String name, Map<String, String> args) {
+                Log.d("eventListener", "onPerformAction(DDD: " + ddd + ", name: " + name + ", args: " + args + ")");
+                final TextView performActionView = (TextView) findViewById(R.id.performAction);
+                performActionView.setText(name + ": " + args.toString());
+                //TODO: perform the action
+                ActionResult result = new ActionResult(true);
+                tdmConnector.getEventHandler().actionFinished(result);
+            }
+
+            @Override
+            public void onWhQuery(String ddd, String name, Map<String, String> args) {
+                Log.d("eventListener", "onPerformWHQuery(DDD: " + ddd + ", name: " + name + ", args: " + args + ")");
+                final TextView performQueryView = (TextView) findViewById(R.id.performQuery);
+                performQueryView.setText(name + ": " + args.toString());
+
+                List<String> result = new ArrayList<>();
+                if(name.equals("phone_number_of_contact")) {
+                    String selectedContact = args.get("selected_contact");
+                    String phoneNumber = CONTACTS.get(selectedContact);
+                    result.add(phoneNumber);
+                }
+                tdmConnector.getEventHandler().whQueryFinished(result);
+            }
+
+            @Override
+            public void onValidity(String ddd, String name, Map<String, String> args) {
+                Log.d("eventListener", "onPerformValidity(DDD: " + ddd + ", name: " + name + ", args: " + args + ")");
+                final TextView validateParameterView = (TextView) findViewById(R.id.validateParameter);
+                validateParameterView.setText(name + ": " + args.toString());
+
+                boolean is_valid = false;
+                if(name.equals("PhoneNumberAvailable")) {
+                    String selectedContact = args.get("selected_contact");
+                    is_valid = contactHasPhoneNumber(selectedContact);
+                }
+                tdmConnector.getEventHandler().validityFinished(is_valid);
+            }
+
+            private boolean contactHasPhoneNumber(String contact) {
+                String phoneNumber = CONTACTS.get(contact);
+                if(phoneNumber != null) {
+                    return true;
+                }
+                return false;
+            }
+
+            @Override
+            public void onEntityRecognizer(String ddd, String name, Map<String, String> args) {
+                Log.d("eventListener", "onPerformEntityRecognition(DDD: " + ddd + ", name: " + name + ", args: " + args + ")");
+                final TextView recognizeEntityView = (TextView) findViewById(R.id.recognizeEntity);
+                recognizeEntityView.setText(name + ": " + args.toString());
+
+                String searchString = args.get("search_string");
+                List<Map<String, String>> result = new ArrayList<>();
+
+                if(name.equals("ContactRecognizer")) {
+                    List<Map<String, String>> recognizedContacts = recognizeContacts(searchString);
+                    result.addAll(recognizedContacts);
+                }
+                Log.d("eventListener", "onPerformEntityRecognition: result="+result.toString());
+                tdmConnector.getEventHandler().entityRecognizerFinished(result);
+            }
+
+            private List<Map<String, String>> recognizeContacts(String searchString) {
+                List<Map<String, String>> recognizedContacts = new ArrayList<>();
+                String loweredSearchString = searchString.toLowerCase();
+                List<String> words = Arrays.asList(loweredSearchString.split(" "));
+                Iterator contactIterator = CONTACTS.entrySet().iterator();
+                while (contactIterator.hasNext()) {
+                    Map.Entry<String, String> entry = (Map.Entry) contactIterator.next();
+                    String contact = entry.getKey();
+                    if (words.contains(contact.toLowerCase())) {
+                        Map<String, String> contactEntity = createContactEntity(contact);
+                        recognizedContacts.add(contactEntity);
+                    }
+                }
+                return recognizedContacts;
+            }
+
+            private Map<String, String> createContactEntity(final String contact) {
+                Map<String, String> recognizedContactEntity = new HashMap<String, String>() {{
+                    put("sort", "contact");
+                    put("grammar_entry", contact);
+                }};
+                return recognizedContactEntity;
             }
 
             @Override
