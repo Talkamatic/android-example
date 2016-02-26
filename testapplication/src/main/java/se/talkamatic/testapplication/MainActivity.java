@@ -20,6 +20,7 @@ import java.util.Map;
 
 import se.talkamatic.frontend.ActionResult;
 import se.talkamatic.frontend.Language;
+import se.talkamatic.frontend.WhQueryResult;
 import se.talkamatic.frontend.asr.AsrListenerAdapter;
 import se.talkamatic.frontend.asr.AsrRecognitionHypothesis;
 import se.talkamatic.frontend.asr.IAsrListener;
@@ -157,13 +158,31 @@ public class MainActivity extends AppCompatActivity {
                 final TextView performQueryView = (TextView) findViewById(R.id.performQuery);
                 performQueryView.setText(name + ": " + args.toString());
 
-                List<String> result = new ArrayList<>();
                 if(name.equals("phone_number_of_contact")) {
-                    String selectedContact = args.get("selected_contact");
-                    String phoneNumber = CONTACTS.get(selectedContact);
-                    result.add(phoneNumber);
+                    WhQueryResult resultObject = phoneNumberOfContactResult(args);
+                    tdmConnector.getEventHandler().whQueryFinished(resultObject);
                 }
-                tdmConnector.getEventHandler().whQueryFinished(result);
+                else {
+                    WhQueryResult resultObject = WhQueryResult.fromStrings(new ArrayList<String>());
+                    tdmConnector.getEventHandler().whQueryFinished(resultObject);
+                }
+            }
+
+            private WhQueryResult phoneNumberOfContactResult(Map<String, String> args) {
+                List<Map<String, String>> result = new ArrayList<>();
+                String selectedContact = args.get("selected_contact_of_phone_number");
+                String phoneNumber = CONTACTS.get(selectedContact);
+                Map<String, String> phoneNumberEntity = createPhoneNumberEntity(phoneNumber);
+                result.add(phoneNumberEntity);
+                WhQueryResult resultObject = WhQueryResult.fromMaps(result);
+                return resultObject;
+            }
+
+            private Map<String, String> createPhoneNumberEntity(final String number) {
+                Map<String, String> phoneNumberEntity = new HashMap<String, String>() {{
+                    put("grammar_entry", number);
+                }};
+                return phoneNumberEntity;
             }
 
             @Override
@@ -172,9 +191,13 @@ public class MainActivity extends AppCompatActivity {
                 final TextView validateParameterView = (TextView) findViewById(R.id.validateParameter);
                 validateParameterView.setText(name + ": " + args.toString());
 
-                boolean is_valid = false;
+                boolean is_valid = true;
+                if(name.equals("CallerNumberAvailable")) {
+                    String selectedContact = args.get("selected_contact_to_call");
+                    is_valid = contactHasPhoneNumber(selectedContact);
+                }
                 if(name.equals("PhoneNumberAvailable")) {
-                    String selectedContact = args.get("selected_contact");
+                    String selectedContact = args.get("selected_contact_of_phone_number");
                     is_valid = contactHasPhoneNumber(selectedContact);
                 }
                 tdmConnector.getEventHandler().validityFinished(is_valid);
