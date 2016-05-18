@@ -112,27 +112,28 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onOpen() {
                 Log.e("backendStatusListener", "onOpen()");
-                setBackendStatus("Opened");
+                displayBackendStatus("Opened");
             }
 
             @Override
             public void onClose(int code, String reason) {
                 Log.e("backendStatusListener", "onClose(" + code + ", " + reason + ")");
-                setBackendStatus("Closed with code " + code + ": " + reason);
+                displayBackendStatus("Closed with code " + code + ": " + reason);
             }
 
             @Override
             public void onError(String reason) {
                 Log.e("backendStatusListener", "onError(" + reason + ")");
-                setBackendStatus("AsrError: " + reason);
+                displayBackendStatus("Error: " + reason);
             }
         };
         tdmConnector.registerBackendStatusListener(backendStatusListener);
     }
 
-    private void setBackendStatus(String status) {
+    private void displayBackendStatus(String status) {
         final TextView backendStatusView = (TextView) findViewById(R.id.backendStatus);
-        backendStatusView.setText(status);
+        String oldTextPrependedWithNewStatus = status + "\n" + backendStatusView.getText();
+        backendStatusView.setText(oldTextPrependedWithNewStatus);
     }
 
     private void registerEventListener() {
