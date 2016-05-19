@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
                 Runnable handleClickRunnable = new Runnable() {
                     @Override
                     public void run() {
-                        tdmConnector.connect("ws://localhost:9090/maharani");
+                        tdmConnector.connect("ws://10.0.0.88:9090/maharani");
                     }
                 };
                 mainHandler.post(handleClickRunnable);
