@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
         mainHandler = new Handler(context.getMainLooper());
 
         tdmConnector = TdmConnector.createTdmConnector(context);
-        tdmConnector.setLanguage(Language.English);
+        tdmConnector.setLanguage(Language.ENGLISH);
 
         registerRecognitionListener();
         registerEventListener();
@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
                 Runnable handleClickRunnable = new Runnable() {
                     @Override
                     public void run() {
-                        tdmConnector.connect("ws://10.0.0.88:9090/maharani");
+                        tdmConnector.connect("ws://localhost:9090/maharani");
                     }
                 };
                 mainHandler.post(handleClickRunnable);
@@ -265,6 +265,13 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("eventListener", "onSystemUtteranceToSpeak(" + recognition + ")");
                 final TextView systemUtteranceView = (TextView) findViewById(R.id.interpretedUtterance);
                 systemUtteranceView.setText(recognition);
+            }
+
+            @Override
+            public void onActiveDddChanged(String activeDdd, String languageCode) {
+                Log.d("eventListener", "onActiveDddChanged(" + activeDdd + ", " + languageCode + ")");
+                final TextView activeDddView = (TextView) findViewById(R.id.activeDdd);
+                activeDddView.setText(activeDdd + ", " + languageCode);
             }
         };
         tdmConnector.registerEventListener(eventListener);

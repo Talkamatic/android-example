@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "se.talkamatic.testapplication"
-        minSdkVersion 16
+        minSdkVersion 17
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"
@@ -22,7 +22,7 @@ android {
 dependencies {
     compile 'com.android.support:appcompat-v7:23.+'
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile(name:'tdmFrontend-1.12.0-release', ext:'aar')
+    compile(name:'tdmFrontend-1.14.0-release', ext:'aar')
 }
 
 repositories{
