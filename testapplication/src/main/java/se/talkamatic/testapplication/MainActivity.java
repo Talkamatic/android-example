@@ -318,6 +318,12 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
+            public void onEmptyResult() {
+                final TextView pttStatus = (TextView) findViewById(R.id.pttStatus);
+                pttStatus.setText("ASR results empty");
+            }
+
+            @Override
             public void onResults(List<AsrRecognitionHypothesis> hypotheses) {
                 final TextView asrRecognitionView = (TextView) findViewById(R.id.userUtterance);
                 if (hypotheses.isEmpty()) {
