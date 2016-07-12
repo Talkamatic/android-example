@@ -34,6 +34,15 @@ public class MainActivity extends AppCompatActivity {
     private IAsrListener recognitionListener;
     private IEventListener eventListener;
     private Handler mainHandler;
+    private enum AsrState {
+        DISABLED,
+        IDLE,
+        REQUESTED_TO_START_LISTENING,
+        LISTENING,
+        REQUESTED_TO_STOP_LISTENING
+    }
+    private AsrState asrState;
+    private final String TAG = "MainActivity";
 
     private static final Map<String, String> CONTACTS = new HashMap<String, String>() {{
         put("John", "0701234567");
@@ -60,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
         setupConnectButton();
         setupDisconnectButton();
         setupPttButton();
+        setAsrState(AsrState.DISABLED);
     }
 
     private void setupConnectButton() {
@@ -99,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
                 Runnable handleClickRunnable = new Runnable() {
                     @Override
                     public void run() {
-                        tdmConnector.notifyPTTPushed();
+                        handlePttButtonClicked();
                     } // To run in main thread
                 };
                 mainHandler.post(handleClickRunnable);
@@ -107,17 +117,36 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void handlePttButtonClicked() {
+        switch(asrState) {
+            case IDLE:
+                setAsrState(AsrState.REQUESTED_TO_START_LISTENING);
+                tdmConnector.startListening();
+                break;
+
+            case LISTENING:
+                setAsrState(AsrState.REQUESTED_TO_STOP_LISTENING);
+                tdmConnector.stopListening();
+                break;
+
+            default:
+                Log.e(TAG, "handlePttButtonClicked(): unexpected AsrState " + asrState);
+        }
+    }
+
     private void registerBackendStatusListener() {
         IBackendStatusListener backendStatusListener = new IBackendStatusListener() {
             @Override
             public void onOpen() {
                 Log.e("backendStatusListener", "onOpen()");
+                setAsrState(AsrState.IDLE);
                 displayBackendStatus("Opened");
             }
 
             @Override
             public void onClose(int code, String reason) {
                 Log.e("backendStatusListener", "onClose(" + code + ", " + reason + ")");
+                setAsrState(AsrState.DISABLED);
                 displayBackendStatus("Closed with code " + code + ": " + reason);
             }
 
@@ -281,6 +310,7 @@ public class MainActivity extends AppCompatActivity {
         recognitionListener = new AsrListenerAdapter() {
             @Override
             public void onReadyForSpeech(Bundle bundle) {
+                setAsrState(AsrState.LISTENING);
                 final TextView pttStatus = (TextView) findViewById(R.id.pttStatus);
                 pttStatus.setText("Ready");
             }
@@ -313,18 +343,21 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onSpeechTimeout() {
+                setAsrState(AsrState.IDLE);
                 final TextView pttStatus = (TextView) findViewById(R.id.pttStatus);
                 pttStatus.setText("ASR timed out");
             }
 
             @Override
             public void onEmptyResult() {
+                setAsrState(AsrState.IDLE);
                 final TextView pttStatus = (TextView) findViewById(R.id.pttStatus);
                 pttStatus.setText("ASR results empty");
             }
 
             @Override
             public void onResults(List<AsrRecognitionHypothesis> hypotheses) {
+                setAsrState(AsrState.IDLE);
                 final TextView asrRecognitionView = (TextView) findViewById(R.id.userUtterance);
                 if (hypotheses.isEmpty()) {
                     asrRecognitionView.setText("");
@@ -365,5 +398,50 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void setAsrState(AsrState state) {
+        asrState = state;
+        updatePttButton();
+    }
+
+    private void updatePttButton() {
+        String text;
+        boolean enabled;
+
+        switch(asrState) {
+            case DISABLED:
+                text = "START LISTEN";
+                enabled = false;
+                break;
+
+            case IDLE:
+                text = "START LISTEN";
+                enabled = true;
+                break;
+
+            case REQUESTED_TO_START_LISTENING:
+                text = "START LISTEN";
+                enabled = false;
+                break;
+
+            case LISTENING:
+                text = "STOP LISTEN";
+                enabled = true;
+                break;
+
+            case REQUESTED_TO_STOP_LISTENING:
+                text = "STOP LISTEN";
+                enabled = false;
+                break;
+
+            default:
+                Log.e(TAG, "updatePttButton(): unexpected AsrState " + asrState);
+                return;
+        }
+
+        final Button button = (Button) findViewById(R.id.pttButton);
+        button.setText(text);
+        button.setEnabled(enabled);
     }
 }
