@@ -1,9 +1,8 @@
 package se.talkamatic.testapplication;
 
 import android.content.Context;
-import android.os.Handler;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -19,21 +18,20 @@ import java.util.List;
 import java.util.Map;
 
 import se.talkamatic.frontend.ActionResult;
+import se.talkamatic.frontend.IBackendStatusListener;
+import se.talkamatic.frontend.IEventListener;
 import se.talkamatic.frontend.Language;
+import se.talkamatic.frontend.TdmConnector;
 import se.talkamatic.frontend.WhQueryResult;
 import se.talkamatic.frontend.asr.AsrListenerAdapter;
 import se.talkamatic.frontend.asr.AsrRecognitionHypothesis;
 import se.talkamatic.frontend.asr.IAsrListener;
-import se.talkamatic.frontend.IBackendStatusListener;
-import se.talkamatic.frontend.IEventListener;
-import se.talkamatic.frontend.TdmConnector;
 
 public class MainActivity extends AppCompatActivity {
 
     private TdmConnector tdmConnector;
     private IAsrListener recognitionListener;
     private IEventListener eventListener;
-    private Handler mainHandler;
     private enum AsrState {
         DISABLED,
         IDLE,
@@ -57,8 +55,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         final Context context = getApplicationContext();
 
-        mainHandler = new Handler(context.getMainLooper());
-
         tdmConnector = TdmConnector.createTdmConnector(context);
         tdmConnector.setLanguage(Language.ENGLISH);
 
@@ -76,13 +72,7 @@ public class MainActivity extends AppCompatActivity {
         final Button button = (Button) findViewById(R.id.connectButton);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Runnable handleClickRunnable = new Runnable() {
-                    @Override
-                    public void run() {
-                        tdmConnector.connect("ws://localhost:9090/maharani");
-                    }
-                };
-                mainHandler.post(handleClickRunnable);
+                tdmConnector.connect("ws://localhost:9090/maharani");
             }
         });
     }
@@ -91,13 +81,7 @@ public class MainActivity extends AppCompatActivity {
         final Button button = (Button) findViewById(R.id.disconnectButton);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Runnable handleClickRunnable = new Runnable() {
-                    @Override
-                    public void run() {
-                        tdmConnector.disconnect();
-                    }
-                };
-                mainHandler.post(handleClickRunnable);
+                tdmConnector.disconnect();
             }
         });
     }
@@ -106,13 +90,7 @@ public class MainActivity extends AppCompatActivity {
         final Button button = (Button) findViewById(R.id.pttButton);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Runnable handleClickRunnable = new Runnable() {
-                    @Override
-                    public void run() {
-                        handlePttButtonClicked();
-                    } // To run in main thread
-                };
-                mainHandler.post(handleClickRunnable);
+                handlePttButtonClicked();
             }
         });
     }
@@ -138,9 +116,9 @@ public class MainActivity extends AppCompatActivity {
         IBackendStatusListener backendStatusListener = new IBackendStatusListener() {
             @Override
             public void onOpen() {
-                Log.e("backendStatusListener", "onOpen()");
-                setAsrState(AsrState.IDLE);
                 displayBackendStatus("Opened");
+                Log.d("backendStatusListener", "onOpen()");
+                setAsrState(AsrState.IDLE);
             }
 
             @Override
@@ -162,7 +140,17 @@ public class MainActivity extends AppCompatActivity {
     private void displayBackendStatus(String status) {
         final TextView backendStatusView = (TextView) findViewById(R.id.backendStatus);
         String oldTextPrependedWithNewStatus = status + "\n" + backendStatusView.getText();
-        backendStatusView.setText(oldTextPrependedWithNewStatus);
+        updateTextViewInUiThread(backendStatusView, oldTextPrependedWithNewStatus);
+    }
+
+    private void updateTextViewInUiThread(final TextView view, final String text) {
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                view.setText(text);
+            }
+        };
+        runOnUiThread(runnable);
     }
 
     private void registerEventListener() {
@@ -176,7 +164,8 @@ public class MainActivity extends AppCompatActivity {
             public void onAction(String ddd, String name, Map<String, String> args) {
                 Log.d("eventListener", "onPerformAction(DDD: " + ddd + ", name: " + name + ", args: " + args + ")");
                 final TextView performActionView = (TextView) findViewById(R.id.performAction);
-                performActionView.setText(name + ": " + args.toString());
+                String text = name + ": " + args.toString();
+                updateTextViewInUiThread(performActionView, text);
                 //TODO: perform the action
                 ActionResult result = new ActionResult(true);
                 tdmConnector.getEventHandler().actionFinished(result);
@@ -186,7 +175,8 @@ public class MainActivity extends AppCompatActivity {
             public void onWhQuery(String ddd, String name, Map<String, String> args) {
                 Log.d("eventListener", "onPerformWHQuery(DDD: " + ddd + ", name: " + name + ", args: " + args + ")");
                 final TextView performQueryView = (TextView) findViewById(R.id.performQuery);
-                performQueryView.setText(name + ": " + args.toString());
+                String text = name + ": " + args.toString();
+                updateTextViewInUiThread(performQueryView, text);
 
                 if(name.equals("phone_number_of_contact")) {
                     WhQueryResult resultObject = phoneNumberOfContactResult(args);
@@ -219,7 +209,8 @@ public class MainActivity extends AppCompatActivity {
             public void onValidity(String ddd, String name, Map<String, String> args) {
                 Log.d("eventListener", "onPerformValidity(DDD: " + ddd + ", name: " + name + ", args: " + args + ")");
                 final TextView validateParameterView = (TextView) findViewById(R.id.validateParameter);
-                validateParameterView.setText(name + ": " + args.toString());
+                String text = name + ": " + args.toString();
+                updateTextViewInUiThread(validateParameterView, text);
 
                 boolean is_valid = true;
                 if(name.equals("CallerNumberAvailable")) {
@@ -245,7 +236,8 @@ public class MainActivity extends AppCompatActivity {
             public void onEntityRecognizer(String ddd, String name, Map<String, String> args) {
                 Log.d("eventListener", "onPerformEntityRecognition(DDD: " + ddd + ", name: " + name + ", args: " + args + ")");
                 final TextView recognizeEntityView = (TextView) findViewById(R.id.recognizeEntity);
-                recognizeEntityView.setText(name + ": " + args.toString());
+                String text = name + ": " + args.toString();
+                updateTextViewInUiThread(recognizeEntityView, text);
 
                 String searchString = args.get("search_string");
                 List<Map<String, String>> result = new ArrayList<>();
@@ -286,21 +278,22 @@ public class MainActivity extends AppCompatActivity {
             public void onSystemUtteranceToSpeak(String utterance) {
                 Log.d("eventListener", "onSystemUtteranceToSpeak(" + utterance + ")");
                 final TextView systemUtteranceView = (TextView) findViewById(R.id.systemUtterance);
-                systemUtteranceView.setText(utterance);
+                updateTextViewInUiThread(systemUtteranceView, utterance);
             }
 
             @Override
             public void onSelectedRecognition(String recognition) {
                 Log.d("eventListener", "onSystemUtteranceToSpeak(" + recognition + ")");
                 final TextView systemUtteranceView = (TextView) findViewById(R.id.interpretedUtterance);
-                systemUtteranceView.setText(recognition);
+                updateTextViewInUiThread(systemUtteranceView, recognition);
             }
 
             @Override
             public void onActiveDddChanged(String activeDdd, String languageCode) {
                 Log.d("eventListener", "onActiveDddChanged(" + activeDdd + ", " + languageCode + ")");
                 final TextView activeDddView = (TextView) findViewById(R.id.activeDdd);
-                activeDddView.setText(activeDdd + ", " + languageCode);
+                String text = activeDdd + ", " + languageCode;
+                updateTextViewInUiThread(activeDddView, text);
             }
         };
         tdmConnector.registerEventListener(eventListener);
@@ -312,16 +305,16 @@ public class MainActivity extends AppCompatActivity {
             public void onReadyForSpeech(Bundle bundle) {
                 setAsrState(AsrState.LISTENING);
                 final TextView pttStatus = (TextView) findViewById(R.id.pttStatus);
-                pttStatus.setText("Ready");
+                updateTextViewInUiThread(pttStatus, "Ready");
             }
 
             @Override
             public void onBeginningOfSpeech() {
                 final TextView pttStatus = (TextView) findViewById(R.id.pttStatus);
-                pttStatus.setText("Began speaking");
+                updateTextViewInUiThread(pttStatus, "Began speaking");
 
                 final TextView asrRecognitionView = (TextView) findViewById(R.id.userUtterance);
-                asrRecognitionView.setText("");
+                updateTextViewInUiThread(asrRecognitionView, "");
             }
 
             @Override
@@ -332,27 +325,27 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onEndOfSpeech() {
                 final TextView pttStatus = (TextView) findViewById(R.id.pttStatus);
-                pttStatus.setText("Finished speaking");
+                updateTextViewInUiThread(pttStatus, "Finished speaking");
             }
 
             @Override
             public void onError(String reason) {
                 final TextView pttStatus = (TextView) findViewById(R.id.pttStatus);
-                pttStatus.setText("AsrError: " + reason);
+                updateTextViewInUiThread(pttStatus, "AsrError: " + reason);
             }
 
             @Override
             public void onSpeechTimeout() {
                 setAsrState(AsrState.IDLE);
                 final TextView pttStatus = (TextView) findViewById(R.id.pttStatus);
-                pttStatus.setText("ASR timed out");
+                updateTextViewInUiThread(pttStatus, "ASR timed out");
             }
 
             @Override
             public void onEmptyResult() {
                 setAsrState(AsrState.IDLE);
                 final TextView pttStatus = (TextView) findViewById(R.id.pttStatus);
-                pttStatus.setText("ASR results empty");
+                updateTextViewInUiThread(pttStatus, "ASR results empty");
             }
 
             @Override
@@ -360,9 +353,10 @@ public class MainActivity extends AppCompatActivity {
                 setAsrState(AsrState.IDLE);
                 final TextView asrRecognitionView = (TextView) findViewById(R.id.userUtterance);
                 if (hypotheses.isEmpty()) {
-                    asrRecognitionView.setText("");
+                    updateTextViewInUiThread(asrRecognitionView, "");
                 } else {
-                    asrRecognitionView.setText(hypotheses.get(0).getRecognition());
+                    String recognition = hypotheses.get(0).getRecognition();
+                    updateTextViewInUiThread(asrRecognitionView, recognition);
                 }
             }
 
@@ -409,7 +403,7 @@ public class MainActivity extends AppCompatActivity {
         String text;
         boolean enabled;
 
-        switch(asrState) {
+        switch (asrState) {
             case DISABLED:
                 text = "START LISTEN";
                 enabled = false;
@@ -441,7 +435,17 @@ public class MainActivity extends AppCompatActivity {
         }
 
         final Button button = (Button) findViewById(R.id.pttButton);
-        button.setText(text);
-        button.setEnabled(enabled);
+        updateButtonInUiThread(button, text, enabled);
+    }
+
+    private void updateButtonInUiThread(final Button button, final String text, final boolean enabled) {
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                button.setText(text);
+                button.setEnabled(enabled);
+            }
+        };
+        runOnUiThread(runnable);
     }
 }
