@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
         final Button button = (Button) findViewById(R.id.connectButton);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                tdmConnector.connect("ws://localhost:9090/maharani");
+                tdmConnector.connect("ws://localhost:9090/websocket");
             }
         });
     }
