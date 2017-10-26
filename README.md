@@ -47,8 +47,14 @@ In order to try the app, you need to do the following:
   }
   ```
 
-4. Open the repository root in Android Studio (File/New/Import project...).
+4. Make sure that connections are made to the TDM server instead of localhost, in testapplication/src/main/java/se/talkamatic/testapplication/MainActivity.java
 
-5. Attach an Android Phone or Tablet to your computer and verify that Android Studio finds it.
+  ```
+  tdmConnector.connect("ws://localhost:9090/websocket");
+  ```
 
-6. Run the test application from Android Studio (Run/Run testapplication)
+5. Open the repository root in Android Studio (File/New/Import project...).
+
+6. Attach an Android Phone or Tablet to your computer and verify that Android Studio finds it.
+
+7. Run the test application from Android Studio (Run/Run testapplication)
