@@ -1,6 +1,8 @@
 package se.talkamatic.testapplication;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -10,19 +12,13 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import se.talkamatic.frontend.ActionResult;
 import se.talkamatic.frontend.IBackendStatusListener;
 import se.talkamatic.frontend.IEventListener;
 import se.talkamatic.frontend.Language;
 import se.talkamatic.frontend.TdmConnector;
-import se.talkamatic.frontend.WhQueryResult;
 import se.talkamatic.frontend.asr.AsrListenerAdapter;
 import se.talkamatic.frontend.asr.AsrRecognitionHypothesis;
 import se.talkamatic.frontend.asr.IAsrListener;
@@ -30,8 +26,6 @@ import se.talkamatic.frontend.asr.IAsrListener;
 public class MainActivity extends AppCompatActivity {
 
     private TdmConnector tdmConnector;
-    private IAsrListener recognitionListener;
-    private IEventListener eventListener;
     private enum AsrState {
         DISABLED,
         IDLE,
@@ -39,15 +33,10 @@ public class MainActivity extends AppCompatActivity {
         LISTENING,
         REQUESTED_TO_STOP_LISTENING
     }
+    private final String SERVER_ADDRESS = "localhost";
+    private final int SERVER_PORT = 9090;
     private AsrState asrState;
     private final String TAG = "MainActivity";
-
-    private static final Map<String, String> CONTACTS = new HashMap<String, String>() {{
-        put("John", "0701234567");
-        put("Lisa", "0709876543");
-        put("Mary", "0706574839");
-        put("Andy", null);
-    }};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
         final Button button = (Button) findViewById(R.id.connectButton);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                tdmConnector.connect("ws://localhost:9090/websocket");
+                tdmConnector.connect("ws://"+SERVER_ADDRESS+":"+SERVER_PORT+"/websocket");
             }
         });
     }
@@ -154,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void registerEventListener() {
-        eventListener = new IEventListener() {
+        IEventListener eventListener = new IEventListener() {
             @Override
             public void onShowPopup(String title, List<Map<String, String>> options) {
                 Log.d("eventListener", "onShowPopup(title: " + title + ", options: " + options + ")");
@@ -166,112 +155,11 @@ public class MainActivity extends AppCompatActivity {
                 final TextView performActionView = (TextView) findViewById(R.id.performAction);
                 String text = name + ": " + args.toString();
                 updateTextViewInUiThread(performActionView, text);
-                //TODO: perform the action
-                ActionResult result = new ActionResult(true);
-                tdmConnector.getEventHandler().actionFinished(result);
-            }
 
-            @Override
-            public void onWhQuery(String ddd, String name, Map<String, String> args) {
-                Log.d("eventListener", "onPerformWHQuery(DDD: " + ddd + ", name: " + name + ", args: " + args + ")");
-                final TextView performQueryView = (TextView) findViewById(R.id.performQuery);
-                String text = name + ": " + args.toString();
-                updateTextViewInUiThread(performQueryView, text);
-
-                if(name.equals("phone_number_of_contact")) {
-                    WhQueryResult resultObject = phoneNumberOfContactResult(args);
-                    tdmConnector.getEventHandler().whQueryFinished(resultObject);
-                }
-                else {
-                    WhQueryResult resultObject = WhQueryResult.fromStrings(new ArrayList<String>());
-                    tdmConnector.getEventHandler().whQueryFinished(resultObject);
-                }
-            }
-
-            private WhQueryResult phoneNumberOfContactResult(Map<String, String> args) {
-                List<Map<String, String>> result = new ArrayList<>();
-                String selectedContact = args.get("selected_contact_of_phone_number");
-                String phoneNumber = CONTACTS.get(selectedContact);
-                Map<String, String> phoneNumberEntity = createPhoneNumberEntity(phoneNumber);
-                result.add(phoneNumberEntity);
-                WhQueryResult resultObject = WhQueryResult.fromMaps(result);
-                return resultObject;
-            }
-
-            private Map<String, String> createPhoneNumberEntity(final String number) {
-                Map<String, String> phoneNumberEntity = new HashMap<String, String>() {{
-                    put("grammar_entry", number);
-                }};
-                return phoneNumberEntity;
-            }
-
-            @Override
-            public void onValidity(String ddd, String name, Map<String, String> args) {
-                Log.d("eventListener", "onPerformValidity(DDD: " + ddd + ", name: " + name + ", args: " + args + ")");
-                final TextView validateParameterView = (TextView) findViewById(R.id.validateParameter);
-                String text = name + ": " + args.toString();
-                updateTextViewInUiThread(validateParameterView, text);
-
-                boolean is_valid = true;
-                if(name.equals("CallerNumberAvailable")) {
-                    String selectedContact = args.get("selected_contact_to_call");
-                    is_valid = contactHasPhoneNumber(selectedContact);
-                }
-                if(name.equals("PhoneNumberAvailable")) {
-                    String selectedContact = args.get("selected_contact_of_phone_number");
-                    is_valid = contactHasPhoneNumber(selectedContact);
-                }
-                tdmConnector.getEventHandler().validityFinished(is_valid);
-            }
-
-            private boolean contactHasPhoneNumber(String contact) {
-                String phoneNumber = CONTACTS.get(contact);
-                if(phoneNumber != null) {
-                    return true;
-                }
-                return false;
-            }
-
-            @Override
-            public void onEntityRecognizer(String ddd, String name, Map<String, String> args) {
-                Log.d("eventListener", "onPerformEntityRecognition(DDD: " + ddd + ", name: " + name + ", args: " + args + ")");
-                final TextView recognizeEntityView = (TextView) findViewById(R.id.recognizeEntity);
-                String text = name + ": " + args.toString();
-                updateTextViewInUiThread(recognizeEntityView, text);
-
-                String searchString = args.get("search_string");
-                List<Map<String, String>> result = new ArrayList<>();
-
-                if(name.equals("ContactRecognizer")) {
-                    List<Map<String, String>> recognizedContacts = recognizeContacts(searchString);
-                    result.addAll(recognizedContacts);
-                }
-                Log.d("eventListener", "onPerformEntityRecognition: result="+result.toString());
-                tdmConnector.getEventHandler().entityRecognizerFinished(result);
-            }
-
-            private List<Map<String, String>> recognizeContacts(String searchString) {
-                List<Map<String, String>> recognizedContacts = new ArrayList<>();
-                String loweredSearchString = searchString.toLowerCase();
-                List<String> words = Arrays.asList(loweredSearchString.split(" "));
-                Iterator contactIterator = CONTACTS.entrySet().iterator();
-                while (contactIterator.hasNext()) {
-                    Map.Entry<String, String> entry = (Map.Entry) contactIterator.next();
-                    String contact = entry.getKey();
-                    if (words.contains(contact.toLowerCase())) {
-                        Map<String, String> contactEntity = createContactEntity(contact);
-                        recognizedContacts.add(contactEntity);
-                    }
-                }
-                return recognizedContacts;
-            }
-
-            private Map<String, String> createContactEntity(final String contact) {
-                Map<String, String> recognizedContactEntity = new HashMap<String, String>() {{
-                    put("sort", "contact");
-                    put("grammar_entry", contact);
-                }};
-                return recognizedContactEntity;
+                String phone_number = args.get("phone_number_of_contact");
+                Intent intent = new Intent(Intent.ACTION_DIAL,
+                        Uri.fromParts("tel", phone_number, null));
+                startActivity(intent);
             }
 
             @Override
@@ -300,7 +188,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void registerRecognitionListener() {
-        recognitionListener = new AsrListenerAdapter() {
+        IAsrListener recognitionListener = new AsrListenerAdapter() {
             @Override
             public void onReadyForSpeech(Bundle bundle) {
                 setAsrState(AsrState.LISTENING);

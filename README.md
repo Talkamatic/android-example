@@ -50,7 +50,8 @@ In order to try the app, you need to do the following:
 4. Make sure that connections are made to the TDM server instead of localhost, in testapplication/src/main/java/se/talkamatic/testapplication/MainActivity.java
 
   ```
-  tdmConnector.connect("ws://localhost:9090/websocket");
+    private final String SERVER_ADDRESS = "localhost";
+    private final int SERVER_PORT = 9090;
   ```
 
 5. Open the repository root in Android Studio (File/New/Import project...).
