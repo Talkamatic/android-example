@@ -156,7 +156,7 @@ public class MainActivity extends AppCompatActivity {
                 String text = name + ": " + args.toString();
                 updateTextViewInUiThread(performActionView, text);
 
-                String phone_number = args.get("phone_number_of_contact");
+                String phone_number = args.get("phone_number_to_call");
                 Intent intent = new Intent(Intent.ACTION_DIAL,
                         Uri.fromParts("tel", phone_number, null));
                 startActivity(intent);
