@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupConnectButton() {
-        final Button button = (Button) findViewById(R.id.connectButton);
+        final Button button = findViewById(R.id.connectButton);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 tdmConnector.connect("ws://"+SERVER_ADDRESS+":"+SERVER_PORT+"/websocket");
@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupDisconnectButton() {
-        final Button button = (Button) findViewById(R.id.disconnectButton);
+        final Button button = findViewById(R.id.disconnectButton);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 tdmConnector.disconnect();
@@ -76,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupPttButton() {
-        final Button button = (Button) findViewById(R.id.pttButton);
+        final Button button = findViewById(R.id.pttButton);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 handlePttButtonClicked();
@@ -127,7 +127,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void displayBackendStatus(String status) {
-        final TextView backendStatusView = (TextView) findViewById(R.id.backendStatus);
+        final TextView backendStatusView = findViewById(R.id.backendStatus);
         String oldTextPrependedWithNewStatus = status + "\n" + backendStatusView.getText();
         updateTextViewInUiThread(backendStatusView, oldTextPrependedWithNewStatus);
     }
@@ -152,7 +152,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onAction(String ddd, String name, Map<String, String> args) {
                 Log.d("eventListener", "onPerformAction(DDD: " + ddd + ", name: " + name + ", args: " + args + ")");
-                final TextView performActionView = (TextView) findViewById(R.id.performAction);
+                final TextView performActionView = findViewById(R.id.performAction);
                 String text = name + ": " + args.toString();
                 updateTextViewInUiThread(performActionView, text);
 
@@ -165,21 +165,21 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSystemUtteranceToSpeak(String utterance) {
                 Log.d("eventListener", "onSystemUtteranceToSpeak(" + utterance + ")");
-                final TextView systemUtteranceView = (TextView) findViewById(R.id.systemUtterance);
+                final TextView systemUtteranceView = findViewById(R.id.systemUtterance);
                 updateTextViewInUiThread(systemUtteranceView, utterance);
             }
 
             @Override
             public void onSelectedRecognition(String recognition) {
                 Log.d("eventListener", "onSystemUtteranceToSpeak(" + recognition + ")");
-                final TextView systemUtteranceView = (TextView) findViewById(R.id.interpretedUtterance);
+                final TextView systemUtteranceView = findViewById(R.id.interpretedUtterance);
                 updateTextViewInUiThread(systemUtteranceView, recognition);
             }
 
             @Override
             public void onActiveDddChanged(String activeDdd, String languageCode) {
                 Log.d("eventListener", "onActiveDddChanged(" + activeDdd + ", " + languageCode + ")");
-                final TextView activeDddView = (TextView) findViewById(R.id.activeDdd);
+                final TextView activeDddView = findViewById(R.id.activeDdd);
                 String text = activeDdd + ", " + languageCode;
                 updateTextViewInUiThread(activeDddView, text);
             }
@@ -192,16 +192,16 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onReadyForSpeech(Bundle bundle) {
                 setAsrState(AsrState.LISTENING);
-                final TextView pttStatus = (TextView) findViewById(R.id.pttStatus);
+                final TextView pttStatus = findViewById(R.id.pttStatus);
                 updateTextViewInUiThread(pttStatus, "Ready");
             }
 
             @Override
             public void onBeginningOfSpeech() {
-                final TextView pttStatus = (TextView) findViewById(R.id.pttStatus);
+                final TextView pttStatus = findViewById(R.id.pttStatus);
                 updateTextViewInUiThread(pttStatus, "Began speaking");
 
-                final TextView asrRecognitionView = (TextView) findViewById(R.id.userUtterance);
+                final TextView asrRecognitionView = findViewById(R.id.userUtterance);
                 updateTextViewInUiThread(asrRecognitionView, "");
             }
 
@@ -212,34 +212,34 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onEndOfSpeech() {
-                final TextView pttStatus = (TextView) findViewById(R.id.pttStatus);
+                final TextView pttStatus = findViewById(R.id.pttStatus);
                 updateTextViewInUiThread(pttStatus, "Finished speaking");
             }
 
             @Override
             public void onError(String reason) {
-                final TextView pttStatus = (TextView) findViewById(R.id.pttStatus);
+                final TextView pttStatus = findViewById(R.id.pttStatus);
                 updateTextViewInUiThread(pttStatus, "AsrError: " + reason);
             }
 
             @Override
             public void onSpeechTimeout() {
                 setAsrState(AsrState.IDLE);
-                final TextView pttStatus = (TextView) findViewById(R.id.pttStatus);
+                final TextView pttStatus = findViewById(R.id.pttStatus);
                 updateTextViewInUiThread(pttStatus, "ASR timed out");
             }
 
             @Override
             public void onEmptyResult() {
                 setAsrState(AsrState.IDLE);
-                final TextView pttStatus = (TextView) findViewById(R.id.pttStatus);
+                final TextView pttStatus = findViewById(R.id.pttStatus);
                 updateTextViewInUiThread(pttStatus, "ASR results empty");
             }
 
             @Override
             public void onResults(List<AsrRecognitionHypothesis> hypotheses) {
                 setAsrState(AsrState.IDLE);
-                final TextView asrRecognitionView = (TextView) findViewById(R.id.userUtterance);
+                final TextView asrRecognitionView = findViewById(R.id.userUtterance);
                 if (hypotheses.isEmpty()) {
                     updateTextViewInUiThread(asrRecognitionView, "");
                 } else {
@@ -322,7 +322,7 @@ public class MainActivity extends AppCompatActivity {
                 return;
         }
 
-        final Button button = (Button) findViewById(R.id.pttButton);
+        final Button button = findViewById(R.id.pttButton);
         updateButtonInUiThread(button, text, enabled);
     }
 
