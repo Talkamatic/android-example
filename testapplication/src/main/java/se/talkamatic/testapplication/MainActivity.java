@@ -183,6 +183,11 @@ public class MainActivity extends AppCompatActivity {
                 String text = activeDdd + ", " + languageCode;
                 updateTextViewInUiThread(activeDddView, text);
             }
+
+            @Override
+            public void onNextPassivityDuration(long milliseconds) {
+                Log.d("eventListener", "onNextPassivityDuration(" + milliseconds + ")");
+            }
         };
         tdmConnector.registerEventListener(eventListener);
     }
