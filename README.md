@@ -1,6 +1,8 @@
 # android-example
 This repository contains an example Android app, showing how to integrate with the TDM Android Frontend Library.
 
+Note: The Android Frontend Library is only supported by TDM 7.0 and lower.
+
 1. [Prerequisites](#prerequisites)
 2. [Building and running](#building-and-running)
 
