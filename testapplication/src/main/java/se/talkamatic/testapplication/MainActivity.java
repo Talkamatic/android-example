@@ -22,6 +22,7 @@ import se.talkamatic.frontend.TdmConnector;
 import se.talkamatic.frontend.asr.AsrListenerAdapter;
 import se.talkamatic.frontend.asr.AsrRecognitionHypothesis;
 import se.talkamatic.frontend.asr.IAsrListener;
+import se.talkamatic.frontend.gsonmessages.ResponseMessage.Parameter;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -61,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
         final Button button = findViewById(R.id.connectButton);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                tdmConnector.connect("ws://"+SERVER_ADDRESS+":"+SERVER_PORT+"/websocket");
+                tdmConnector.connect("http://"+SERVER_ADDRESS+":"+SERVER_PORT+"/interact");
             }
         });
     }
@@ -111,10 +112,10 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onClose(int code, String reason) {
-                Log.e("backendStatusListener", "onClose(" + code + ", " + reason + ")");
+            public void onClose() {
+                Log.e("backendStatusListener", "onClose()");
                 setAsrState(AsrState.DISABLED);
-                displayBackendStatus("Closed with code " + code + ": " + reason);
+                displayBackendStatus("Closed");
             }
 
             @Override
@@ -145,20 +146,15 @@ public class MainActivity extends AppCompatActivity {
     private void registerEventListener() {
         IEventListener eventListener = new IEventListener() {
             @Override
-            public void onShowPopup(String title, List<Map<String, String>> options) {
-                Log.d("eventListener", "onShowPopup(title: " + title + ", options: " + options + ")");
-            }
-
-            @Override
-            public void onAction(String ddd, String name, Map<String, String> args) {
+            public void onAction(String ddd, String name, Map<String, Parameter> args) {
                 Log.d("eventListener", "onPerformAction(DDD: " + ddd + ", name: " + name + ", args: " + args + ")");
                 final TextView performActionView = findViewById(R.id.performAction);
                 String text = name + ": " + args.toString();
                 updateTextViewInUiThread(performActionView, text);
 
-                String phone_number = args.get("phone_number_to_call");
+                Parameter phone_number = args.get("phone_number_to_call");
                 Intent intent = new Intent(Intent.ACTION_DIAL,
-                        Uri.fromParts("tel", phone_number, null));
+                        Uri.fromParts("tel", phone_number.getGrammar_entry(), null));
                 startActivity(intent);
             }
 
@@ -170,22 +166,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onSelectedRecognition(String recognition) {
-                Log.d("eventListener", "onSystemUtteranceToSpeak(" + recognition + ")");
-                final TextView systemUtteranceView = findViewById(R.id.interpretedUtterance);
-                updateTextViewInUiThread(systemUtteranceView, recognition);
-            }
-
-            @Override
-            public void onActiveDddChanged(String activeDdd, String languageCode) {
-                Log.d("eventListener", "onActiveDddChanged(" + activeDdd + ", " + languageCode + ")");
-                final TextView activeDddView = findViewById(R.id.activeDdd);
-                String text = activeDdd + ", " + languageCode;
-                updateTextViewInUiThread(activeDddView, text);
-            }
-
-            @Override
-            public void onNextPassivityDuration(long milliseconds) {
+            public void onNextPassivityDuration(Long milliseconds) {
                 Log.d("eventListener", "onNextPassivityDuration(" + milliseconds + ")");
             }
         };
