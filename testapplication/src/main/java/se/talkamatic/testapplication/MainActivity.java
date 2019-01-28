@@ -152,10 +152,12 @@ public class MainActivity extends AppCompatActivity {
                 String text = name + ": " + args.toString();
                 updateTextViewInUiThread(performActionView, text);
 
-                Parameter phone_number = args.get("phone_number_to_call");
-                Intent intent = new Intent(Intent.ACTION_DIAL,
-                        Uri.fromParts("tel", phone_number.getGrammar_entry(), null));
-                startActivity(intent);
+                if (name.equals("call")) {
+                    Parameter phone_number = args.get("phone_number_to_call");
+                    Intent intent = new Intent(Intent.ACTION_DIAL,
+                            Uri.fromParts("tel", phone_number.getGrammar_entry(), null));
+                    startActivity(intent);
+                }
             }
 
             @Override
